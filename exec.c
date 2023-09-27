@@ -68,6 +68,11 @@ exec(char *path, char **argv)
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
 
+  // We mark the first page as not accessible to
+  // the user. This allows an user program to crash when dereferencing
+  // a NULL pointer.
+  clearpteu(pgdir, (char*) 0);
+
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
