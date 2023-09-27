@@ -1724,6 +1724,29 @@ uio()
   printf(1, "uio test done\n");
 }
 
+void
+null_deref()
+{
+  int pid;
+
+  pid = fork();
+  if(pid == 0){
+
+    volatile char* test = 0;
+    // Should crash
+    volatile char test2 = *test;
+    (void) test2;
+
+    printf(1, "null deref: null deref succeeded; test FAILED\n");
+    exit();
+  } else if(pid < 0){
+    printf (1, "fork failed\n");
+    exit();
+  }
+  wait();
+  printf(1, "null deref test done\n");
+}
+
 void argptest()
 {
   int fd;
@@ -1796,6 +1819,7 @@ main(int argc, char *argv[])
   bigdir(); // slow
 
   uio();
+  null_deref();
 
   exectest();
 
