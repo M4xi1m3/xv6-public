@@ -1,6 +1,16 @@
 struct stat;
 struct rtcdate;
 
+// Date structure
+struct date {
+  uint second;
+  uint minute;
+  uint hour;
+  uint day;
+  uint month;
+  uint year;
+};
+
 // system calls
 int fork(void);
 int exit(void) __attribute__((noreturn));
@@ -23,6 +33,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int date(struct date*);
 
 // ulib.c
 int stat(const char*, struct stat*);

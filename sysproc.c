@@ -89,3 +89,21 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// return the UTC date
+int sys_date(void)
+{
+
+  struct rtcdate* ptr;
+  
+  // Get the pointer to the struct rtcdate.
+  if (argptr(0, (char**) &ptr, sizeof(struct rtcdate)) < 0) {
+    return -1;
+  }
+
+  // Call the implementation of cmostime
+  cmostime(ptr);
+
+  // Everything went well, return 0
+  return 0;
+}
