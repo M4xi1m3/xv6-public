@@ -185,6 +185,7 @@ UPROGS=\
 	_rm\
 	_sh\
 	_stressfs\
+	_testlseek\
 	_usertests\
 	_wc\
 	_zombie\
