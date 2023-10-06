@@ -91,7 +91,8 @@ sys_uptime(void)
 }
 
 // return the UTC date
-int sys_date(void)
+int
+sys_date(void)
 {
 
   struct rtcdate* ptr;
@@ -105,5 +106,16 @@ int sys_date(void)
   cmostime(ptr);
 
   // Everything went well, return 0
+  return 0;
+}
+
+// Shutdown the system
+int
+sys_shutdown(void)
+{
+  // QEMU-specific method
+  outw(0x604, 0x2000);
+  for(;;);
+  
   return 0;
 }
