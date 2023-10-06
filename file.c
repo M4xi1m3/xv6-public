@@ -9,6 +9,7 @@
 #include "spinlock.h"
 #include "sleeplock.h"
 #include "file.h"
+#include "fcntl.h"
 
 struct devsw devsw[NDEV];
 struct {
@@ -155,3 +156,32 @@ filewrite(struct file *f, char *addr, int n)
   panic("filewrite");
 }
 
+//PAGEBREAK!
+// Seek in file f
+int
+fileseek(struct file *f, int offset, int whence)
+{
+  int off;
+  if(f->type != FD_INODE)
+    return -1;
+
+  switch(whence) {
+  case SEEK_SET:
+    off = offset;
+    break;
+  case SEEK_END:
+    off = f->ip->size + offset;
+    break;
+  case SEEK_CUR:
+    off = f->off + offset;
+    break;
+  default:
+    return -1;
+  }
+
+  if (off < 0 || off > f->ip->size)
+    return -1;
+  f->off = (uint) off;
+
+  return 0;
+}

@@ -34,6 +34,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int date(struct date*);
+int lseek(int filedes, int offset, int whence);
 
 // ulib.c
 int stat(const char*, struct stat*);
