@@ -184,6 +184,7 @@ UPROGS=\
 	_ls\
 	_mkdir\
 	_mknod\
+	_ps\
 	_rm\
 	_sh\
 	_shutdown\
