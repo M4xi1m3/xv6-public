@@ -12,9 +12,17 @@ main(void)
 {
   int pid, wpid;
 
-  if(open("console", O_RDWR) < 0){
-    mknod("console", 1, 1);
-    open("console", O_RDWR);
+  if(mkdir("dev") >= 0) {
+    mknod("dev/console", 1, 1);
+    mknod("dev/null", 2, 0);
+    mknod("dev/zero", 2, 1);
+    mknod("dev/mem", 2, 2);
+    mknod("dev/kmem", 2, 3);
+  }
+
+  if(open("dev/console", O_RDWR) < 0){
+    mknod("dev/console", 1, 1);
+    open("dev/console", O_RDWR);
   }
   dup(0);  // stdout
   dup(0);  // stderr
