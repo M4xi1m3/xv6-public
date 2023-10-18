@@ -171,10 +171,6 @@ consputc(int c)
       ;
   }
 
-  if(c == BACKSPACE){
-    uartputc('\b'); uartputc(' '); uartputc('\b');
-  } else
-    uartputc(c);
   cgaputc(c);
 }
 

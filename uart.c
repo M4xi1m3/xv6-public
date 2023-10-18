@@ -12,66 +12,99 @@
 #include "proc.h"
 #include "x86.h"
 
-#define COM1    0x3f8
+#define COM1 0x3f8
 
-static int uart;    // is there a uart?
+static int uart; // is there a uart?
 
-void
-uartinit(void)
-{
-  char *p;
-
-  // Turn off the FIFO
-  outb(COM1+2, 0);
-
-  // 9600 baud, 8 data bits, 1 stop bit, parity off.
-  outb(COM1+3, 0x80);    // Unlock divisor
-  outb(COM1+0, 115200/9600);
-  outb(COM1+1, 0);
-  outb(COM1+3, 0x03);    // Lock divisor, 8 data bits.
-  outb(COM1+4, 0);
-  outb(COM1+1, 0x01);    // Enable receive interrupts.
-
-  // If status is 0xFF, no serial port.
-  if(inb(COM1+5) == 0xFF)
-    return;
-  uart = 1;
-
-  // Acknowledge pre-existing interrupt conditions;
-  // enable interrupts.
-  inb(COM1+2);
-  inb(COM1+0);
-  ioapicenable(IRQ_COM1, 0);
-
-  // Announce that we're here.
-  for(p="xv6...\n"; *p; p++)
-    uartputc(*p);
-}
-
-void
-uartputc(int c)
+void uartputc(int c)
 {
   int i;
 
-  if(!uart)
+  if (!uart)
     return;
-  for(i = 0; i < 128 && !(inb(COM1+5) & 0x20); i++)
+  for (i = 0; i < 128 && !(inb(COM1 + 5) & 0x20); i++)
     microdelay(10);
-  outb(COM1+0, c);
+  outb(COM1 + 0, c);
 }
 
 static int
 uartgetc(void)
 {
-  if(!uart)
+  if (!uart)
     return -1;
-  if(!(inb(COM1+5) & 0x01))
+  if (!(inb(COM1 + 5) & 0x01))
     return -1;
-  return inb(COM1+0);
+  return inb(COM1 + 0);
 }
 
-void
-uartintr(void)
+int uartread(struct inode *ip, char *dst, int n)
 {
-  consoleintr(uartgetc);
+  iunlock(ip);
+  int target = n;
+  int c;
+  for (; n > 0; n--)
+  {
+    c = uartgetc();
+    if (c < 0)
+    {
+      ilock(ip);
+      return -1;
+    }
+  }
+
+  ilock(ip);
+  return target - n;
+}
+
+int
+uartwrite(struct inode *ip, char *buf, int n)
+{
+  int i;
+
+  iunlock(ip);
+  for(i = 0; i < n; i++)
+    uartputc(buf[i] & 0xff);
+  ilock(ip);
+
+  return n;
+}
+
+void uartintr(void)
+{
+  (void)uartgetc;
+  // consoleintr(uartgetc);
+}
+
+void uartinit(void)
+{
+  // char *p;
+
+  // Turn off the FIFO
+  outb(COM1 + 2, 0);
+
+  // 9600 baud, 8 data bits, 1 stop bit, parity off.
+  outb(COM1 + 3, 0x80); // Unlock divisor
+  outb(COM1 + 0, 115200 / 9600);
+  outb(COM1 + 1, 0);
+  outb(COM1 + 3, 0x03); // Lock divisor, 8 data bits.
+  outb(COM1 + 4, 0);
+  outb(COM1 + 1, 0x01); // Enable receive interrupts.
+
+  // If status is 0xFF, no serial port.
+  if (inb(COM1 + 5) == 0xFF)
+    return;
+  uart = 1;
+
+  // Acknowledge pre-existing interrupt conditions;
+  // enable interrupts.
+  inb(COM1 + 2);
+  inb(COM1 + 0);
+  ioapicenable(IRQ_COM1, 0);
+
+  // Announce that we're here.
+  // for(p="xv6...\n"; *p; p++)
+  //  uartputc(*p);
+
+  devsw[SERIAL].write = uartwrite;
+  devsw[SERIAL].read = uartread;
 }
