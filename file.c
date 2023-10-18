@@ -162,7 +162,7 @@ filewrite(struct file *f, char *addr, int n)
 int
 fileseek(struct file *f, int offset, int whence)
 {
-  int off;
+  uint off;
   if(f->type != FD_INODE)
     return -1;
   
@@ -183,9 +183,9 @@ fileseek(struct file *f, int offset, int whence)
     return -1;
   }
 
-  if ((off < 0 || off >= f->ip->size) && f->ip->type != T_DEV)
+  if (f->ip->type != T_DEV && off >= f->ip->size)
     return -1;
-  f->off = (uint) off;
+  f->off = off;
 
   return off;
 }

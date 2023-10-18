@@ -385,6 +385,29 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   return 0;
 }
 
+int
+kmemread(char* dst, uint off, int n)
+{
+  struct proc *curproc = myproc();
+  char page_defined = 1;
+
+  if (walkpgdir(curproc->pgdir, (void*)(off), 0) == 0)
+    page_defined = 0;
+  
+  for(int i = 0; i < n; i++) {
+    if ((off + i) % PGSIZE == 0)
+      if (walkpgdir(curproc->pgdir, (void*)(off + i), 0) == 0)
+        page_defined = 0;
+    
+    if (page_defined)
+      dst[i] = *((char*) (off + i));
+    else
+      dst[i] = 0;
+  }
+
+  return n;
+}
+
 //PAGEBREAK!
 // Blank page.
 //PAGEBREAK!
