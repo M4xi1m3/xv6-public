@@ -78,6 +78,34 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  case T_PGFLT:
+    if(myproc() == 0 || (tf->cs&3) == 0){
+      // In kernel, it must be our mistake.
+      cprintf("unexpected page fault %d from cpu %d eip %x (cr2=0x%x)\n",
+              tf->trapno, cpuid(), tf->eip, rcr2());
+      panic("trap");
+    }
+
+    // In user space, check the address
+    if (rcr2() >= VSCADDR + PGSIZE && rcr2() < VSCADDR + 2 * PGSIZE) {
+      // The address is inside the VSC1 page, allocate it and fill it
+      struct proc* p = myproc();
+      if (p == 0)
+        panic("No process");
+
+      void* vsc = vsc_alloc(p->pgdir, 1);
+      ((int*) vsc)[0] = p->pid;
+      ((int*) vsc)[1] = p->parent->pid;
+    } else {
+      // The address is bad. Kill the process
+      cprintf("pid %d %s: page fault on cpu %d "
+              "eip 0x%x addr 0x%x--kill proc\n",
+              myproc()->pid, myproc()->name, cpuid(), tf->eip, rcr2());
+      myproc()->killed = 1;
+    }
+
+    break;
+
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){

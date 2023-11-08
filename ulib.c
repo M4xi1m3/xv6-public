@@ -109,3 +109,25 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
+
+int
+getpid()
+{
+  return ((int*) 0x40000000)[0];
+}
+int
+getppid()
+{
+  return ((int*) 0x40000000)[1];
+}
+
+int
+getpid2()
+{
+  return ((int*) 0x40001000)[0];
+}
+int
+getppid2()
+{
+  return ((int*) 0x40001000)[1];
+}

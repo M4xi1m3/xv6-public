@@ -190,6 +190,7 @@ UPROGS=\
 	_shutdown\
 	_stressfs\
 	_testlseek\
+	_testpid\
 	_testread\
 	_usertests\
 	_wc\

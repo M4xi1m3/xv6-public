@@ -408,6 +408,35 @@ kmemread(char* dst, uint off, int n)
   return n;
 }
 
+void*
+vsc_alloc(pde_t *pgdir, int n)
+{
+  // Alloc the page
+  char *mem = kalloc();
+  if(mem == 0){
+    cprintf("vsc_alloc out of memory\n");
+    return 0;
+  }
+
+  // Set it to zero
+  memset(mem, 0, PGSIZE);
+
+  // Map it to the 0x40000000 + SZ * n address (user-space), read-only
+  if(mappages(pgdir, (void*) (VSCADDR + PGSIZE * n), PGSIZE, V2P(mem), PTE_U) < 0){
+    cprintf("vsc_alloc out of memory (2)\n");
+    kfree(mem);
+    return 0;
+  }
+
+  return mem;
+}
+
+void*
+vsc_get(pde_t *pgdir, int n)
+{
+  return uva2ka(pgdir, (void*) (VSCADDR + PGSIZE * n));
+}
+
 //PAGEBREAK!
 // Blank page.
 //PAGEBREAK!

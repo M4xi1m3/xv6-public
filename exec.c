@@ -73,6 +73,14 @@ exec(char *path, char **argv)
   // a NULL pointer.
   clearpteu(pgdir, (char*) 0);
 
+  // Create the VSC page and put the values
+  void* vsc;
+  if ((vsc = vsc_alloc(pgdir, 0)) == 0)
+    goto bad;
+  
+  ((int*) vsc)[0] = curproc->pid;
+  ((int*) vsc)[1] = curproc->parent->pid;
+
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)

@@ -25,7 +25,9 @@ SYSCALL(link)
 SYSCALL(mkdir)
 SYSCALL(chdir)
 SYSCALL(dup)
+#if 0
 SYSCALL(getpid)
+#endif
 SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)

@@ -183,6 +183,7 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
+  void* vsc;
 
   // Allocate process.
   if((np = allocproc()) == 0){
@@ -199,6 +200,19 @@ fork(void)
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
+
+  // Allocate the VSC
+  if ((vsc = vsc_alloc(np->pgdir, 0)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    freevm(np->pgdir);
+    np->pgdir = 0;
+    np->state = UNUSED;
+    return -1;
+  }
+
+  ((int*) vsc)[0] = np->pid;
+  ((int*) vsc)[1] = np->parent->pid;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -256,6 +270,14 @@ exit(void)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
       p->parent = initproc;
+
+      void* vsc = vsc_get(p->pgdir, 0);
+      ((int*) vsc)[1] = p->parent->pid;
+
+      void* vsc2 = vsc_get(p->pgdir, 1);
+      if (vsc2 != 0)
+        ((int*) vsc2)[1] = p->parent->pid;
+
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
