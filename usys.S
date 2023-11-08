@@ -8,6 +8,7 @@
     int $T_SYSCALL; \
     ret
 
+SYSCALL(call)
 SYSCALL(fork)
 SYSCALL(exit)
 SYSCALL(wait)

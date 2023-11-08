@@ -8,6 +8,21 @@
 #include "proc.h"
 
 int
+sys_call(void)
+{
+  uint handler;
+
+  if (argint(0, (int*) &handler) < 0)
+    return -1;
+  
+  struct proc* p = myproc();
+  
+  p->tf->eip = handler;
+
+  return 0;
+}
+
+int
 sys_fork(void)
 {
   return fork();

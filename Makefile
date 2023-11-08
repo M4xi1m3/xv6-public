@@ -189,6 +189,7 @@ UPROGS=\
 	_sh\
 	_shutdown\
 	_stressfs\
+	_testcall\
 	_testlseek\
 	_testread\
 	_usertests\

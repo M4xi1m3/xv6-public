@@ -12,6 +12,7 @@ struct date {
 };
 
 // system calls
+int call(void(*)(void));
 int fork(void);
 int exit(void) __attribute__((noreturn));
 int wait(void);
