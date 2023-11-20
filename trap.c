@@ -7,6 +7,7 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
+#include "signal.h"
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -32,17 +33,36 @@ idtinit(void)
   lidt(idt, sizeof(idt));
 }
 
+void
+handlesigs(struct trapframe* tf)
+{
+  // Handle signals
+  struct proc *p = myproc();
+  if (p != 0 && (tf->cs & 0b11) == DPL_USER) {
+    if (p->signals) {
+      cprintf("Calling signal handler\n");
+      int esp = tf->esp;
+      esp -= 4;
+      *((uint*) esp) = tf->eip;
+      tf->esp = esp;
+      tf->eip = p->sighandler;
+      p->signals = 0;
+    }
+  }
+}
+
 //PAGEBREAK: 41
 void
 trap(struct trapframe *tf)
 {
   if(tf->trapno == T_SYSCALL){
-    if(myproc()->killed)
+    if(myproc()->signals & SIG_BMAP(SIGKILL))
       exit();
     myproc()->tf = tf;
     syscall();
-    if(myproc()->killed)
+    if(myproc()->signals & SIG_BMAP(SIGKILL))
       exit();
+    handlesigs(tf);
     return;
   }
 
@@ -54,6 +74,7 @@ trap(struct trapframe *tf)
       wakeup(&ticks);
       release(&tickslock);
     }
+    handlesigs(tf);
     lapiceoi();
     break;
   case T_IRQ0 + IRQ_IDE:
@@ -91,13 +112,13 @@ trap(struct trapframe *tf)
             "eip 0x%x addr 0x%x--kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
             tf->err, cpuid(), tf->eip, rcr2());
-    myproc()->killed = 1;
+    myproc()->signals |= SIG_BMAP(SIGKILL);
   }
 
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
-  if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+  if(myproc() && myproc()->signals & SIG_BMAP(SIGKILL) && (tf->cs&3) == DPL_USER)
     exit();
 
   // Force process to give up CPU on clock tick.
@@ -107,6 +128,6 @@ trap(struct trapframe *tf)
     yield();
 
   // Check if the process has been killed since we yielded
-  if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+  if(myproc() && myproc()->signals & SIG_BMAP(SIGKILL) && (tf->cs&3) == DPL_USER)
     exit();
 }

@@ -8,7 +8,6 @@
     int $T_SYSCALL; \
     ret
 
-SYSCALL(call)
 SYSCALL(fork)
 SYSCALL(exit)
 SYSCALL(wait)
@@ -28,6 +27,7 @@ SYSCALL(chdir)
 SYSCALL(dup)
 SYSCALL(getpid)
 SYSCALL(sbrk)
+SYSCALL(signal)
 SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(date)

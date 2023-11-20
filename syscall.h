@@ -23,4 +23,4 @@
 #define SYS_date   22
 #define SYS_lseek  23
 #define SYS_shutdown 24
-#define SYS_call 25
+#define SYS_signal 25

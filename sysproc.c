@@ -6,18 +6,17 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "signal.h"
 
 int
-sys_call(void)
+sys_signal(void)
 {
-  uint handler;
+  uint action;
 
-  if (argint(0, (int*) &handler) < 0)
+  if (argint(0, (int*) &action) < 0)
     return -1;
-  
-  struct proc* p = myproc();
-  
-  p->tf->eip = handler;
+
+  signal(action);
 
   return 0;
 }
@@ -45,10 +44,11 @@ int
 sys_kill(void)
 {
   int pid;
+  int signal;
 
-  if(argint(0, &pid) < 0)
+  if(argint(0, &pid) < 0 || argint(1, &signal) < 0)
     return -1;
-  return kill(pid);
+  return kill(pid, signal);
 }
 
 int
@@ -82,7 +82,7 @@ sys_sleep(void)
   acquire(&tickslock);
   ticks0 = ticks;
   while(ticks - ticks0 < n){
-    if(myproc()->killed){
+    if(myproc()->signals){
       release(&tickslock);
       return -1;
     }

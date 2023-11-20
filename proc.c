@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "signal.h"
 
 struct {
   struct spinlock lock;
@@ -142,6 +143,9 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  // Set sighandler to zero
+  p->sighandler = 0;
+
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
@@ -202,6 +206,9 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
+
+  // Copy sighandler
+  np->sighandler = curproc->sighandler;
 
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
@@ -293,7 +300,7 @@ wait(void)
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
-        p->killed = 0;
+        p->signals = 0;
         p->state = UNUSED;
         release(&ptable.lock);
         return pid;
@@ -301,7 +308,7 @@ wait(void)
     }
 
     // No point waiting if we don't have any children.
-    if(!havekids || curproc->killed){
+    if(!havekids || curproc->signals & SIG_BMAP(SIGKILL)){
       release(&ptable.lock);
       return -1;
     }
@@ -477,14 +484,18 @@ wakeup(void *chan)
 // Process won't exit until it returns
 // to user space (see trap in trap.c).
 int
-kill(int pid)
+kill(int pid, int signal)
 {
   struct proc *p;
+
+  if (signal < 1 || signal > 32){
+    return -1;
+  }
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
-      p->killed = 1;
+      p->signals |= 1 << (signal - 1);
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
@@ -531,4 +542,11 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+void
+signal(uint action)
+{
+  struct proc* p = myproc();
+  p->sighandler = action;
 }

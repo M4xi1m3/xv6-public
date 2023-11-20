@@ -13,6 +13,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "signal.h"
 #include "x86.h"
 
 static void consputc(int);
@@ -243,7 +244,7 @@ consoleread(struct inode *ip, char *dst, uint off, int n)
   acquire(&cons.lock);
   while(n > 0){
     while(input.r == input.w){
-      if(myproc()->killed){
+      if(myproc()->signals & SIG_BMAP(SIGKILL)){
         release(&cons.lock);
         ilock(ip);
         return -1;

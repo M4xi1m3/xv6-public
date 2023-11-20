@@ -12,7 +12,6 @@ struct date {
 };
 
 // system calls
-int call(void(*)(void));
 int fork(void);
 int exit(void) __attribute__((noreturn));
 int wait(void);
@@ -20,7 +19,7 @@ int pipe(int*);
 int write(int, const void*, int);
 int read(int, void*, int);
 int close(int);
-int kill(int);
+int kill(int, int);
 int exec(char*, char**);
 int open(const char*, int);
 int mknod(const char*, short, short);
@@ -32,6 +31,7 @@ int chdir(const char*);
 int dup(int);
 int getpid(void);
 char* sbrk(int);
+int signal(void(*)(void));
 int sleep(int);
 int uptime(void);
 int date(struct date*);

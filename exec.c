@@ -104,6 +104,8 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  // We set the sighandler to 0, because the previous action doesn't exist anymore
+  curproc->sighandler = 0;
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;

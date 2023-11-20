@@ -82,7 +82,6 @@ argstr(int n, char **pp)
   return fetchstr(addr, pp);
 }
 
-extern int sys_call(void);
 extern int sys_chdir(void);
 extern int sys_close(void);
 extern int sys_date(void);
@@ -103,6 +102,7 @@ extern int sys_pipe(void);
 extern int sys_read(void);
 extern int sys_sbrk(void);
 extern int sys_shutdown(void);
+extern int sys_signal(void);
 extern int sys_sleep(void);
 extern int sys_unlink(void);
 extern int sys_wait(void);
@@ -134,7 +134,7 @@ static int (*syscalls[])(void) = {
 [SYS_date]    sys_date,
 [SYS_lseek]   sys_lseek,
 [SYS_shutdown]sys_shutdown,
-[SYS_call]    sys_call,
+[SYS_signal]  sys_signal,
 };
 
 void
